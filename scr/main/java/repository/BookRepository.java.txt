@@ -1,0 +1,30 @@
+package repository;
+
+import model.Book;
+import java.util.ArrayList;
+import java.util.List;
+
+public class BookRepository {
+    private List<Book> bookList = new ArrayList<>();
+
+    public boolean addBook(Book book) {
+        if (findByIsbn(book.getIsbn()) != null) {
+            return false; 
+        }
+        bookList.add(book);
+        return true;
+    }
+
+    public Book findByIsbn(String isbn) {
+        for (Book book : bookList) {
+            if (book.getIsbn().equals(isbn)) {
+                return book;
+            }
+        }
+        return null;
+    }
+
+    public List<Book> findAll() {
+        return bookList;
+    }
+}
