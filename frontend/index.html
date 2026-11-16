@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống quản lý thư viện</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 550px;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #24476b;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2878c7;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #2878c7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #185b9b;
+        }
+
+        #message {
+            margin-top: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>QUẢN LÝ THƯ VIỆN</h1>
+        <h2>FORM NHẬP SÁCH</h2>
+
+        <form id="addBookForm">
+
+            <div class="form-group">
+                <label for="title">Tên sách (Title)</label>
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Nhập tên sách"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="author">Tác giả (Author)</label>
+                <input
+                    type="text"
+                    id="author"
+                    placeholder="Nhập tên tác giả"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="isbn">Mã ISBN</label>
+                <input
+                    type="text"
+                    id="isbn"
+                    placeholder="Nhập mã ISBN"
+                    required
+                >
+            </div>
+
+            <button type="submit">+ Thêm sách</button>
+
+            <p id="message" role="status" aria-live="polite"></p>
+
+        </form>
+
+    </div>
+
+    <script>
+        const form = document.getElementById("addBookForm");
+        const message = document.getElementById("message");
+
+        // Kiểm tra dữ liệu đầu vào
+        function validateBook(book) {
+            const errors = [];
+
+            if (!book.title.trim()) {
+                errors.push("Tên sách không được để trống");
+            }
+
+            if (!book.author.trim()) {
+                errors.push("Tác giả không được để trống");
+            }
+
+            if (!book.isbn.trim()) {
+                errors.push("ISBN không được để trống");
+            }
+
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        // Gọi Backend thêm sách
+        async function addBook(book) {
+            const response = await fetch("/api/books", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(book)
+            });
+
+            if (!response.ok) {
+                throw new Error("Không thể thêm sách!");
+            }
+
+            return await response.json();
+        }
+
+        // Xử lý sự kiện nhấn nút Thêm sách
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const book = {
+                title: document.getElementById("title").value.trim(),
+                author: document.getElementById("author").value.trim(),
+                isbn: document.getElementById("isbn").value.trim()
+            };
+
+            const result = validateBook(book);
+
+            message.className = "";
+
+            if (!result.isValid) {
+                message.textContent = result.errors.join(", ");
+                message.className = "error";
+                return;
+            }
+
+            try {
+                const button = form.querySelector("button");
+                button.disabled = true;
+                button.textContent = "Đang thêm sách...";
+
+                await addBook(book);
+
+                message.textContent = "Thêm sách thành công!";
+                message.className = "success";
+
+                form.reset();
+
+                button.disabled = false;
+                button.textContent = "+ Thêm sách";
+
+            } catch (error) {
+                message.textContent = error.message;
+                message.className = "error";
+
+                const button = form.querySelector("button");
+                button.disabled = false;
+                button.textContent = "+ Thêm sách";
+            }
+        });
+    </script>
+
+</body>
+</html>
